@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마음온(MindOn) - 베이즈 확률 기반 AI 청소년 멘탈케어 서비스</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts (Pretendard & Noto Sans KR) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #f0f4fd 0%, #e8f0fe 100%);
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    @keyframes breath-animation {
+      0% { transform: scale(1); opacity: 0.8; }
+      40% { transform: scale(1.35); opacity: 1; }
+      70% { transform: scale(1.35); opacity: 0.9; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+    .breathing-circle {
+      animation: breath-animation 19s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased pb-16">
+
+  <!-- 네비게이션 헤더 -->
+  <header class="glass-card sticky top-0 z-40 shadow-sm border-b border-indigo-100">
+    <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+          <i class="fa-solid fa-heart-pulse text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">신성여고 인공지능 프로젝트</span>
+          <h1 class="text-lg font-bold text-slate-800 leading-tight">마음온 <span class="text-indigo-600">MindOn</span></h1>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 text-xs text-slate-500">
+        <span class="hidden sm:inline bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+          <i class="fa-solid fa-calculator text-indigo-500 mr-1"></i>나이브 베이즈 분류기 탑재
+        </span>
+        <a href="#model-info" class="text-indigo-600 hover:text-indigo-700 font-medium px-2 py-1">알고리즘 원리</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 컨테이너 -->
+  <main class="max-w-5xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- 페르소나 및 프로젝트 인트로 배너 -->
+    <section class="glass-card rounded-2xl p-5 shadow-sm border border-indigo-50">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center space-x-1.5 text-xs font-semibold text-violet-700 bg-violet-100/80 px-2.5 py-1 rounded-full mb-2">
+            <i class="fa-solid fa-user-tag"></i>
+            <span>페르소나 김서윤(18세, 고2) 맞춤형 AI 케어</span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-900">말 못할 청소년 고민, 베이즈 확률로 조기 감지하고 케어합니다</h2>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+            비용 부담과 시선 두려움으로 상담을 망설이는 청소년을 위해, 일상 텍스트와 상황별 사전 확률 가중치를 결합하여 정서적 위기를 3단계로 분석하고 즉시 실천 솔루션을 제공합니다.
+          </p>
+        </div>
+        <!-- 빠른 시연 프리셋 버튼 -->
+        <div class="bg-indigo-50/70 p-3 rounded-xl border border-indigo-100/80 flex-shrink-0">
+          <p class="text-xs font-bold text-indigo-900 mb-2 flex items-center">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1.5 text-indigo-500"></i>페르소나 시나리오 빠른 체험:
+          </p>
+          <div class="flex flex-wrap gap-1.5">
+            <button onclick="loadPreset('sns')" class="text-xs bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg font-medium transition shadow-xs flex items-center">
+              <i class="fa-solid fa-users mr-1 text-rose-500"></i>SNS 소외감 (고위험)
+            </button>
+            <button onclick="loadPreset('exam')" class="text-xs bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg font-medium transition shadow-xs flex items-center">
+              <i class="fa-solid fa-book-open mr-1 text-amber-500"></i>시험 압박 (경고)
+            </button>
+            <button onclick="loadPreset('daily')" class="text-xs bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg font-medium transition shadow-xs flex items-center">
+              <i class="fa-solid fa-face-smile mr-1 text-emerald-500"></i>일상 기록 (정상)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 입력 섹션 및 분석 대시보드 그리드 -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- 입력 폼 카드 (좌측 7컬럼) -->
+      <section class="lg:col-span-7 glass-card rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 class="font-bold text-slate-900 text-base flex items-center">
+              <i class="fa-solid fa-pen-fancy text-indigo-600 mr-2"></i>오늘의 감정과 고민 털어놓기
+            </h3>
+            <span class="text-xs text-slate-400">완전 익명 보장 · 로컬 분석</span>
+          </div>
+
+          <!-- 상황 사전 확률 선택 (핵심 속성 1) -->
+          <div class="mb-4">
+            <label class="block text-xs font-semibold text-slate-700 mb-2">
+              1. 현재 겪고 있는 배경 상황을 선택해 주세요 <span class="text-indigo-600">(사전 확률 가중치 반영)</span>
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer">
+                <input type="radio" name="context" value="대인관계·SNS 갈등" class="peer sr-only" checked onchange="updateContextTag()">
+                <div class="p-2.5 text-center rounded-xl border border-slate-200 bg-white peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 peer-checked:text-indigo-700 transition hover:bg-slate-50">
+                  <i class="fa-solid fa-comments text-base mb-1 block text-rose-500"></i>
+                  <span class="text-xs font-medium block">대인관계/SNS</span>
+                  <span class="text-[10px] text-slate-400 block mt-0.5">가중치 +38%</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="context" value="시험·학업 압박" class="peer sr-only" onchange="updateContextTag()">
+                <div class="p-2.5 text-center rounded-xl border border-slate-200 bg-white peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 peer-checked:text-indigo-700 transition hover:bg-slate-50">
+                  <i class="fa-solid fa-graduation-cap text-base mb-1 block text-amber-500"></i>
+                  <span class="text-xs font-medium block">시험·학업 압박</span>
+                  <span class="text-[10px] text-slate-400 block mt-0.5">가중치 +32%</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="context" value="일상 상태" class="peer sr-only" onchange="updateContextTag()">
+                <div class="p-2.5 text-center rounded-xl border border-slate-200 bg-white peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 peer-checked:text-indigo-700 transition hover:bg-slate-50">
+                  <i class="fa-solid fa-leaf text-base mb-1 block text-emerald-500"></i>
+                  <span class="text-xs font-medium block">일상 상태</span>
+                  <span class="text-[10px] text-slate-400 block mt-0.5">가중치 +26%</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 고민 텍스트 입력창 -->
+          <div class="mb-4">
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="userText" class="text-xs font-semibold text-slate-700">
+                2. 마음속에 든 생각이나 일기를 자유롭게 적어보세요
+              </label>
+              <span id="charCount" class="text-[11px] text-slate-400">0자 / 0단어</span>
+            </div>
+            <textarea id="userText" rows="5" 
+              class="w-full text-sm p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none placeholder:text-slate-400 bg-white"
+              placeholder="예: 단톡방에서 나만 빼고 얘기하는 것 같아 너무 비참하고 사라지고 싶어..."
+              oninput="handleTextInput()"></textarea>
+          </div>
+        </div>
+
+        <!-- 분석 버튼 -->
+        <div>
+          <button id="btnAnalyze" onclick="runAnalysis()" 
+            class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-indigo-200 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>베이즈 확률 기반 감정 및 위험도 분석하기</span>
+          </button>
+          <p class="text-center text-[11px] text-slate-400 mt-2">
+            <i class="fa-solid fa-shield-halved mr-1 text-slate-400"></i>본 프로그램은 외부 전송 없이 브라우저 메모리 상에서 안전하게 연산됩니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 분석 결과 카드 (우측 5컬럼) -->
+      <section class="lg:col-span-5 glass-card rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <h3 class="font-bold text-slate-900 text-base flex items-center">
+              <i class="fa-solid fa-square-poll-vertical text-indigo-600 mr-2"></i>AI 멘탈 위험도 진단 결과
+            </h3>
+            <span id="resultBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+              대기 중
+            </span>
+          </div>
+
+          <!-- 위험도 게이지 및 점수 영역 -->
+          <div class="text-center py-2">
+            <div class="inline-flex items-baseline justify-center space-x-1">
+              <span id="riskScoreVal" class="text-4xl font-extrabold text-slate-800 tracking-tight">-</span>
+              <span class="text-base font-bold text-slate-400">/ 100점</span>
+            </div>
+            <p id="riskScoreDesc" class="text-xs font-semibold text-slate-500 mt-1">고민 텍스트를 입력하고 분석 버튼을 눌러주세요.</p>
+            
+            <!-- 프로그레스 바 -->
+            <div class="w-full bg-slate-100 h-2.5 rounded-full mt-3 overflow-hidden border border-slate-200/80">
+              <div id="riskScoreBar" class="h-full bg-indigo-500 transition-all duration-700 ease-out" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- 핵심 속성 3종 분석 패널 (평가기준: 핵심 속성 3가지 가공) -->
+          <div class="mt-5 space-y-2.5">
+            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center">
+              <i class="fa-solid fa-cubes mr-1.5 text-indigo-500"></i>추출된 핵심 속성 3요소 (Features)
+            </div>
+
+            <!-- 속성 1: 상황 사전 가중치 -->
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <span class="text-slate-600 font-medium">① 상황 사전 확률 가중치</span>
+              </div>
+              <span id="attrContext" class="font-bold text-slate-800">0.38 (+38%)</span>
+            </div>
+
+            <!-- 속성 2: 부정 어휘 밀도 -->
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <span class="text-slate-600 font-medium">② 부정 감정 어휘 밀도</span>
+              </div>
+              <span id="attrDensity" class="font-bold text-slate-800">0.0%</span>
+            </div>
+
+            <!-- 속성 3: 베이즈 사후 확률 분포 -->
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-slate-600 font-medium">③ 베이즈 사후 확률 분포 <span class="text-[10px] text-slate-400">P(Class|Words)</span></span>
+                <span id="attrTopClass" class="font-bold text-indigo-600">-</span>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center text-[10px]">
+                  <span class="w-16 text-slate-500">0단계 정상:</span>
+                  <div class="flex-1 bg-slate-200 h-1.5 rounded-full overflow-hidden mx-2">
+                    <div id="prob0Bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 33%"></div>
+                  </div>
+                  <span id="prob0Val" class="w-8 text-right font-medium text-slate-700">33%</span>
+                </div>
+                <div class="flex items-center text-[10px]">
+                  <span class="w-16 text-slate-500">1단계 경고:</span>
+                  <div class="flex-1 bg-slate-200 h-1.5 rounded-full overflow-hidden mx-2">
+                    <div id="prob1Bar" class="bg-amber-500 h-full transition-all duration-500" style="width: 33%"></div>
+                  </div>
+                  <span id="prob1Val" class="w-8 text-right font-medium text-slate-700">33%</span>
+                </div>
+                <div class="flex items-center text-[10px]">
+                  <span class="w-16 text-slate-500">2단계 고위험:</span>
+                  <div class="flex-1 bg-slate-200 h-1.5 rounded-full overflow-hidden mx-2">
+                    <div id="prob2Bar" class="bg-rose-500 h-full transition-all duration-500" style="width: 33%"></div>
+                  </div>
+                  <span id="prob2Val" class="w-8 text-right font-medium text-slate-700">33%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 감지된 부정 어휘 칩 -->
+        <div class="mt-4 pt-3 border-t border-slate-100">
+          <div class="text-[11px] text-slate-400 mb-1.5">감지된 핵심 위기 어휘 (KNu SentiLex):</div>
+          <div id="detectedWords" class="flex flex-wrap gap-1">
+            <span class="text-[11px] text-slate-400 italic">아직 감지된 어휘가 없습니다.</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 3단계 맞춤 개입 솔루션 인터랙티브 섹션 (평가 기준: 맞춤 미션 제공) -->
+    <section id="solutionSection" class="glass-card rounded-2xl p-6 shadow-sm border border-indigo-50">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div>
+          <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">단계별 맞춤 개입</span>
+          <h3 class="font-bold text-slate-900 text-base mt-1">심리 위기 완화를 위한 즉시 실천 미션</h3>
+        </div>
+        <span id="solutionLevelBadge" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">
+          진단 대기
+        </span>
+      </div>
+
+      <!-- 솔루션 컨텐츠 영역 -->
+      <div id="solutionContent" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- 0단계 미션 카드 -->
+        <div class="p-4 rounded-xl border border-emerald-100 bg-emerald-50/40 opacity-70 transition duration-300 hover:opacity-100" id="cardLvl0">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-sm mb-2">0</div>
+          <h4 class="font-bold text-slate-800 text-sm">정상/주의 단계 미션</h4>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+            오늘 경험한 소소한 감사나 긍정적인 순간 1가지를 감정 노트에 기록하고, 가벼운 산책으로 뇌를 환기해보세요.
+          </p>
+          <div class="mt-3">
+            <button onclick="openGratitudeModal()" class="text-xs text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg font-medium transition w-full">
+              <i class="fa-solid fa-pen mr-1"></i>한 줄 긍정 기록하기
+            </button>
+          </div>
+        </div>
+
+        <!-- 1단계 미션 카드 -->
+        <div class="p-4 rounded-xl border border-amber-100 bg-amber-50/40 opacity-70 transition duration-300 hover:opacity-100" id="cardLvl1">
+          <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-sm mb-2">1</div>
+          <h4 class="font-bold text-slate-800 text-sm">경고 단계 미션</h4>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+            SNS 알림을 2시간 동안 끄고(디지털 디톡스), 자율신경계를 안정시키는 4-7-8 이완 호흡법을 실천하세요.
+          </p>
+          <div class="mt-3">
+            <button onclick="openBreathingModal()" class="text-xs text-amber-800 bg-white hover:bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg font-medium transition w-full">
+              <i class="fa-solid fa-wind mr-1"></i>4-7-8 호흡법 시작하기
+            </button>
+          </div>
+        </div>
+
+        <!-- 2단계 미션 카드 -->
+        <div class="p-4 rounded-xl border border-rose-100 bg-rose-50/40 opacity-70 transition duration-300 hover:opacity-100" id="cardLvl2">
+          <div class="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold text-sm mb-2">2</div>
+          <h4 class="font-bold text-slate-800 text-sm">고위험 긴급 지원</h4>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+            혼자 견디지 마세요. 24시간 청소년 전문 상담원과 학교 위클래스(Wee) 전담 교사가 함께 대기하고 있습니다.
+          </p>
+          <div class="mt-3 space-y-1.5">
+            <a href="tel:1388" class="block text-center text-xs text-white bg-rose-600 hover:bg-rose-700 font-semibold px-3 py-1.5 rounded-lg transition shadow-xs">
+              <i class="fa-solid fa-phone mr-1"></i>청소년상담전화 1388 통화
+            </a>
+            <button onclick="alert('교내 Wee클래스 비공개 익명 상담 접수가 연계되었습니다. 전문 상담교사가 비밀을 엄수하여 연락을 드립니다.')" class="w-full text-xs text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg font-medium transition">
+              <i class="fa-solid fa-school mr-1"></i>교내 위클래스 긴급 알림
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 알고리즘 원리 및 수행평가 성찰 섹션 (토글 아코디언) -->
+    <section id="model-info" class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200">
+      <div class="flex items-center justify-between cursor-pointer" onclick="toggleDetails()">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-brain text-indigo-600 text-lg"></i>
+          <h3 class="font-bold text-slate-900 text-base">인공지능 모델 구조 및 베이즈 확률 계산 수식 (상세 보기)</h3>
+        </div>
+        <i id="accordionIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+      </div>
+
+      <div id="detailsContent" class="hidden mt-5 pt-4 border-t border-slate-100 text-xs sm:text-sm text-slate-700 space-y-4">
+        
+        <!-- 1. 기계학습 선정 이유 -->
+        <div class="bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100">
+          <h4 class="font-bold text-indigo-950 mb-1 flex items-center">
+            <i class="fa-solid fa-check-double text-indigo-600 mr-1.5"></i>
+            추론 vs 기계학습(베이즈 확률) 비교 및 선정 근거 (보고서 3.1절)
+          </h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            - <strong>기존 규칙 기반 추론의 한계:</strong> 사전에 작성된 IF-THEN 조건문은 청소년들의 신조어, 줄임말, 맥락적 뉘앙스 변화에 대처하기 어렵습니다.<br>
+            - <strong>베이즈 확률 기반 기계학습의 장점:</strong> 단어의 동시 출현 빈도와 조건부 확률을 활용하므로 유연한 감정 분류가 가능하며, 외부 서버 통신 없이 <strong>로컬 환경(브라우저/노트북)</strong>에서 연산되어 청소년의 민감한 고민 데이터 유출을 원천 방지합니다.
+          </p>
+        </div>
+
+        <!-- 2. 나이브 베이즈 수식 -->
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1">수학적 원리: 나이브 베이즈 조건부 확률 정리 (Laplace Smoothing 적용)</h4>
+          <div class="bg-slate-900 text-slate-100 p-3 rounded-lg font-mono text-xs overflow-x-auto leading-relaxed">
+            P(Class|Text) ∝ P(Class) × ∏ P(Word_i | Class)<br>
+            P(Word_i | Class) = ( Count(Word_i, Class) + α ) / ( Total_Words_in_Class + α × |Vocabulary| )  [α = 1.0]<br>
+            Final_Risk_Score = min( 100.0, ( P(Class=1)×50 + P(Class=2)×100 ) × ( 1 + Context_Weight ) )
+          </div>
+        </div>
+
+        <!-- 3. 학습 데이터셋 테이블 -->
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2">학습 데이터 코퍼스 (3.2절 반영)</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                  <th class="p-2">No</th>
+                  <th class="p-2">학습 문장 (청소년 고민/일상)</th>
+                  <th class="p-2">분류 라벨</th>
+                  <th class="p-2">위험 등급</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr><td class="p-2">1</td><td class="p-2">오늘 급식 맛있어서 기분 좋았는데 수행평가 좀 귀찮네</td><td class="p-2 font-mono">0</td><td class="p-2 text-emerald-600 font-semibold">정상/주의</td></tr>
+                <tr><td class="p-2">2</td><td class="p-2">친구랑 점심시간에 매점 가서 빵 먹었다</td><td class="p-2 font-mono">0</td><td class="p-2 text-emerald-600 font-semibold">정상/주의</td></tr>
+                <tr><td class="p-2">3</td><td class="p-2">내일 시험인데 공부가 하나도 안 돼서 미치겠어</td><td class="p-2 font-mono">1</td><td class="p-2 text-amber-600 font-semibold">경고</td></tr>
+                <tr><td class="p-2">4</td><td class="p-2">성적 떨어질까 봐 너무 불안하고 잠이 안 와</td><td class="p-2 font-mono">1</td><td class="p-2 text-amber-600 font-semibold">경고</td></tr>
+                <tr><td class="p-2">5</td><td class="p-2">단톡방에서 나만 빼고 얘기하는 것 같아 비참하고 사라지고 싶어</td><td class="p-2 font-mono">2</td><td class="p-2 text-rose-600 font-semibold">고위험</td></tr>
+                <tr><td class="p-2">6</td><td class="p-2">아무도 내 편이 없는 것 같아 다 포기하고 싶고 너무 우울해</td><td class="p-2 font-mono">2</td><td class="p-2 text-rose-600 font-semibold">고위험</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. KNu 부정 감성 사전 -->
+        <div>
+          <h4 class="font-bold text-slate-900 mb-1">KNu SentiLex 연계 부정 감성 어휘</h4>
+          <p class="text-xs text-slate-500 mb-1.5">청소년 위기 상태 감지에 직접 관여하는 핵심 부정 어휘 사전:</p>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">미치겠어</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">불안하고</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">비참하고</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">사라지고</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">포기하고</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">우울해</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">힘들어</span>
+            <span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs">괴로워</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4-7-8 호흡 운동 모달 -->
+  <div id="breathingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl relative">
+      <button onclick="closeBreathingModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">자율신경계 안정</span>
+      <h3 class="text-lg font-bold text-slate-900 mt-2">4-7-8 이완 호흡법</h3>
+      <p class="text-xs text-slate-500 mt-1">심박수를 낮추고 교감신경의 긴장을 완화합니다.</p>
+
+      <!-- 호흡 원형 애니메이션 -->
+      <div class="my-8 flex justify-center items-center h-48">
+        <div id="breathCircle" class="w-36 h-36 rounded-full bg-gradient-to-tr from-indigo-400 to-violet-500 flex flex-col items-center justify-center text-white shadow-lg transition-transform duration-1000 ease-in-out">
+          <span id="breathStageText" class="text-xs font-semibold">준비</span>
+          <span id="breathTimerNum" class="text-3xl font-extrabold mt-1">4</span>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-600 font-medium mb-5" id="breathInstruction">
+        코로 4초간 천천히 숨을 들이마십니다.
+      </div>
+
+      <div class="flex space-x-2">
+        <button id="btnStartBreath" onclick="startBreathingCycle()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md shadow-indigo-100">
+          호흡 가이드 시작
+        </button>
+        <button onclick="closeBreathingModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 긍정 감사 일기 모달 -->
+  <div id="gratitudeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative">
+      <button onclick="closeGratitudeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">0단계 멘탈 케어</span>
+      <h3 class="text-lg font-bold text-slate-900 mt-2">오늘의 긍정 경험 한 줄 기록</h3>
+      <p class="text-xs text-slate-500 mt-1">작은 긍정 감정을 기록하면 심리적 회복탄력성이 강화됩니다.</p>
+
+      <div class="mt-4">
+        <textarea id="gratitudeText" rows="3" class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="예: 오늘 점심에 친구와 웃으면서 급식을 먹어서 기분이 좋았다."></textarea>
+      </div>
+
+      <div class="mt-4 flex space-x-2">
+        <button onclick="saveGratitude()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-100">
+          마음 서랍에 저장하기
+        </button>
+        <button onclick="closeGratitudeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 transition">
+          취소
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="mt-12 text-center text-xs text-slate-400 border-t border-slate-200 pt-6 max-w-5xl mx-auto px-4">
+    <p>신성여자고등학교 인공지능 기초 과목 수행평가 산출물</p>
+    <p class="mt-1">베이즈 확률 기반 AI 멘탈케어 서비스 기획 및 프로토타입 구현체</p>
+    <p class="text-[11px] text-slate-400 mt-2">Designed with Bayes Conditional Probability & Vanilla JavaScript (Zero Server Dependency)</p>
+  </footer>
+
+  <!-- 나이브 베이즈 및 전체 서비스 엔진 자바스크립트 -->
+  <script>
+    /* ========================================================
+       1. 학습 데이터 및 부정 감성 어휘 사전 정의
+       (사용자 파이썬 코드 및 3.2절과 100% 일치)
+       ======================================================== */
+    const trainTexts = [
+      "오늘 급식 맛있어서 기분 좋았는데 수행평가 좀 귀찮네",
+      "친구랑 점심시간에 매점 가서 빵 먹었다",
+      "내일 시험인데 공부가 하나도 안 돼서 미치겠어",
+      "성적 떨어질까 봐 너무 불안하고 잠이 안 와",
+      "단톡방에서 나만 빼고 얘기하는 것 같아 비참하고 사라지고 싶어",
+      "아무도 내 편이 없는 것 같아 다 포기하고 싶고 너무 우울해"
+    ];
+    const trainLabels = [0, 0, 1, 1, 2, 2]; // 0: 정상/주의, 1: 경고, 2: 고위험
+
+    const negativeLexicon = ["미치겠어", "불안하고", "비참하고", "사라지고", "포기하고", "우울해", "힘들어", "괴로워"];
+
+    // 상황별 사전 확률 가중치 (Context Weights)
+    const contextWeights = {
+      "일상 상태": 0.26,
+      "시험·학업 압박": 0.32,
+      "대인관계·SNS 갈등": 0.38
+    };
+
+    /* ========================================================
+       2. 순수 자바스크립트 Multinomial Naive Bayes 엔진 구현
+       ======================================================== */
+    class MultinomialNBClassifier {
+      constructor(alpha = 1.0) {
+        this.alpha = alpha;
+        this.vocabulary = new Map(); // 단어 -> 인덱스
+        this.classes = [0, 1, 2];
+        this.classCounts = [0, 0, 0];
+        this.classTotalWords = [0, 0, 0];
+        this.wordCountsInClass = []; // [단어index][클래스]
+      }
+
+      // 텍스트 토큰화 (단어 추출)
+      tokenize(text) {
+        return text.trim().toLowerCase().split(/\s+/).filter(w => w.length > 0);
+      }
+
+      // 모델 학습 (fit)
+      fit(texts, labels) {
+        // 어휘집 구축
+        let wordIdx = 0;
+        texts.forEach(text => {
+          const tokens = this.tokenize(text);
+          tokens.forEach(tok => {
+            if (!this.vocabulary.has(tok)) {
+              this.vocabulary.set(tok, wordIdx++);
+            }
+          });
+        });
+
+        const vocabSize = this.vocabulary.size;
+        this.wordCountsInClass = Array.from({ length: vocabSize }, () => [0, 0, 0]);
+
+        // 빈도 계산
+        texts.forEach((text, i) => {
+          const c = labels[i];
+          this.classCounts[c]++;
+          const tokens = this.tokenize(text);
+          tokens.forEach(tok => {
+            const vIdx = this.vocabulary.get(tok);
+            this.wordCountsInClass[vIdx][c]++;
+            this.classTotalWords[c]++;
+          });
+        });
+      }
+
+      // 사후 확률 예측 (predict_proba with Laplace Smoothing)
+      predictProba(text) {
+        const tokens = this.tokenize(text);
+        const vocabSize = this.vocabulary.size;
+        const totalDocs = trainLabels.length;
+
+        // 각 클래스별 log P(c)
+        const logProbs = this.classes.map(c => {
+          let logP = Math.log(this.classCounts[c] / totalDocs);
+          
+          let matchedTokens = 0;
+          tokens.forEach(tok => {
+            if (this.vocabulary.has(tok)) {
+              matchedTokens++;
+              const vIdx = this.vocabulary.get(tok);
+              const countInC = this.wordCountsInClass[vIdx][c];
+              // 라플라스 스무딩 조건부 확률: (count + alpha) / (totalWordsInC + alpha * vocabSize)
+              const condP = (countInC + this.alpha) / (this.classTotalWords[c] + this.alpha * vocabSize);
+              logP += Math.log(condP);
+            }
+          });
+
+          return { logP, matchedTokens };
+        });
+
+        // 어휘 사전에 일치하는 단어가 전혀 없는 경우 균등 확률 분배
+        const anyMatch = logProbs.some(lp => lp.matchedTokens > 0);
+        if (!anyMatch) {
+          return [0.50, 0.30, 0.20]; // 기본 일상형 안정 분포
+        }
+
+        // Softmax 정규화
+        const maxLog = Math.max(...logProbs.map(lp => lp.logP));
+        const exps = logProbs.map(lp => Math.exp(lp.logP - maxLog));
+        const sumExp = exps.reduce((a, b) => a + b, 0);
+
+        return exps.map(e => e / sumExp);
+      }
+    }
+
+    // 모델 인스턴스 생성 및 즉시 학습
+    const nbModel = new MultinomialNBClassifier(1.0);
+    nbModel.fit(trainTexts, trainLabels);
+
+    /* ========================================================
+       3. 메인 분석 함수: predict_mental_risk 로직
+       ======================================================== */
+    function predictMentalRisk(userText, context) {
+      // 1. 상황 사전 확률 가중치 (Context_Weight)
+      const wContext = contextWeights[context] || 0.26;
+
+      // 2. 부정 감정 어휘 밀도 (Sentiment_Density)
+      const words = userText.trim().split(/\s+/).filter(w => w.length > 0);
+      const totalWords = Math.max(words.length, 1);
+      
+      const detectedList = [];
+      let negCount = 0;
+      words.forEach(w => {
+        const found = negativeLexicon.find(neg => w.includes(neg));
+        if (found) {
+          negCount++;
+          if (!detectedList.includes(found)) detectedList.push(found);
+        }
+      });
+      const sentimentDensity = Number(((negCount / totalWords) * 100).toFixed(1));
+
+      // 3. 베이즈 사후 확률 계산
+      const baseProbs = nbModel.predictProba(userText); // [p0, p1, p2]
+
+      // 4. 상황 가중치를 반영한 최종 위기 지수 산출 (0~100점 환산)
+      // 공식: (p1 * 50 + p2 * 100) * (1 + wContext)
+      const rawRisk = (baseProbs[1] * 50 + baseProbs[2] * 100) * (1 + wContext);
+      const riskScore = Math.min(100.0, Number(rawRisk.toFixed(1)));
+
+      // 5. 3단계 판정 등급 및 개입 솔루션 결정
+      let level = "0단계 (정상/주의)";
+      let solution = "오늘의 긍정 경험 1가지 기록하기 및 가벼운 산책 미션 제공";
+      let levelNum = 0;
+
+      if (riskScore >= 65 || baseProbs[2] > 0.5) {
+        level = "2단계 (고위험)";
+        solution = "즉시 전문 상담 연결(청소년상담전화 1388) 및 학교 위클래스(Wee) 긴급 연계";
+        levelNum = 2;
+      } else if (riskScore >= 35 || baseProbs[1] > 0.4) {
+        level = "1단계 (경고)";
+        solution = "스마트폰 알림 2시간 차단(디지털 디톡스) + 4-7-8 호흡법 및 감정 일기 작성";
+        levelNum = 1;
+      }
+
+      return {
+        context,
+        wContext,
+        sentimentDensity,
+        detectedList,
+        baseProbs,
+        riskScore,
+        level,
+        levelNum,
+        solution
+      };
+    }
+
+    /* ========================================================
+       4. UI 이벤트 및 인터랙션 핸들러
+       ======================================================== */
+    function handleTextInput() {
+      const text = document.getElementById("userText").value;
+      const charCount = text.length;
+      const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+      document.getElementById("charCount").innerText = `${charCount}자 / ${wordCount}단어`;
+    }
+
+    function updateContextTag() {
+      // 라디오 변경 시 즉시 실행
+    }
+
+    // 페르소나 프리셋 버튼 로더
+    function loadPreset(type) {
+      const textEl = document.getElementById("userText");
+      if (type === 'sns') {
+        setRadioValue('대인관계·SNS 갈등');
+        textEl.value = "단톡방에서 나만 빼고 얘기하는 것 같아 너무 비참하고 사라지고 싶어";
+      } else if (type === 'exam') {
+        setRadioValue('시험·학업 압박');
+        textEl.value = "내일 시험인데 공부가 하나도 안 돼서 미치겠고 성적 떨어질까 봐 너무 불안해";
+      } else if (type === 'daily') {
+        setRadioValue('일상 상태');
+        textEl.value = "오늘 급식 맛있어서 기분 좋았는데 친구랑 매점 가서 빵 먹었다";
+      }
+      handleTextInput();
+      runAnalysis();
+    }
+
+    function setRadioValue(val) {
+      const radios = document.getElementsByName('context');
+      for (const r of radios) {
+        if (r.value === val) r.checked = true;
+      }
+    }
+
+    function getSelectedContext() {
+      const radios = document.getElementsByName('context');
+      for (const r of radios) {
+        if (r.checked) return r.value;
+      }
+      return "대인관계·SNS 갈등";
+    }
+
+    // 분석 실행
+    function runAnalysis() {
+      const text = document.getElementById("userText").value.trim();
+      if (!text) {
+        alert("고민 텍스트를 입력해 주세요.");
+        document.getElementById("userText").focus();
+        return;
+      }
+
+      const context = getSelectedContext();
+      const res = predictMentalRisk(text, context);
+
+      // UI 렌더링
+      renderResults(res);
+    }
+
+    function renderResults(res) {
+      // 1. 점수 및 게이지
+      const scoreValEl = document.getElementById("riskScoreVal");
+      const scoreBarEl = document.getElementById("riskScoreBar");
+      const badgeEl = document.getElementById("resultBadge");
+      const descEl = document.getElementById("riskScoreDesc");
+
+      scoreValEl.innerText = res.riskScore;
+      scoreBarEl.style.width = `${Math.min(res.riskScore, 100)}%`;
+
+      // 2. 등급별 색상 지정
+      if (res.levelNum === 2) {
+        badgeEl.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300 animate-pulse";
+        badgeEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>${res.level}`;
+        scoreValEl.className = "text-4xl font-extrabold text-rose-600 tracking-tight";
+        scoreBarEl.className = "h-full bg-rose-600 transition-all duration-700 ease-out";
+        descEl.innerText = "전문가의 즉각적인 위기 개입 및 심리 지원이 권고됩니다.";
+      } else if (res.levelNum === 1) {
+        badgeEl.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-300";
+        badgeEl.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${res.level}`;
+        scoreValEl.className = "text-4xl font-extrabold text-amber-600 tracking-tight";
+        scoreBarEl.className = "h-full bg-amber-500 transition-all duration-700 ease-out";
+        descEl.innerText = "학업/관계 스트레스 축적 상태입니다. 이완 휴식이 필요합니다.";
+      } else {
+        badgeEl.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300";
+        badgeEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${res.level}`;
+        scoreValEl.className = "text-4xl font-extrabold text-emerald-600 tracking-tight";
+        scoreBarEl.className = "h-full bg-emerald-500 transition-all duration-700 ease-out";
+        descEl.innerText = "안정적인 심리 상태를 유지하고 있습니다.";
+      }
+
+      // 3. 핵심 속성 3가지 표시
+      document.getElementById("attrContext").innerText = `${res.wContext} (+${Math.round(res.wContext * 100)}%)`;
+      document.getElementById("attrDensity").innerText = `${res.sentimentDensity}%`;
+
+      const p0 = Math.round(res.baseProbs[0] * 100);
+      const p1 = Math.round(res.baseProbs[1] * 100);
+      const p2 = Math.round(res.baseProbs[2] * 100);
+
+      document.getElementById("prob0Bar").style.width = `${p0}%`;
+      document.getElementById("prob0Val").innerText = `${p0}%`;
+      document.getElementById("prob1Bar").style.width = `${p1}%`;
+      document.getElementById("prob1Val").innerText = `${p1}%`;
+      document.getElementById("prob2Bar").style.width = `${p2}%`;
+      document.getElementById("prob2Val").innerText = `${p2}%`;
+
+      const topClassNames = ["0단계 정상 우세", "1단계 경고 우세", "2단계 고위험 우세"];
+      const maxP = Math.max(...res.baseProbs);
+      const topIdx = res.baseProbs.indexOf(maxP);
+      document.getElementById("attrTopClass").innerText = topClassNames[topIdx];
+
+      // 4. 감지된 어휘 칩 렌더링
+      const wordsContainer = document.getElementById("detectedWords");
+      if (res.detectedList.length > 0) {
+        wordsContainer.innerHTML = res.detectedList.map(w => 
+          `<span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center">
+             <i class="fa-solid fa-tag text-[9px] mr-1 text-rose-400"></i>${w}
+           </span>`
+        ).join("");
+      } else {
+        wordsContainer.innerHTML = `<span class="text-[11px] text-slate-400 italic">사전 등록된 위험 어휘 없음</span>`;
+      }
+
+      // 5. 솔루션 카드 강조 처리
+      highlightSolutionCard(res.levelNum, res.level);
+    }
+
+    function highlightSolutionCard(levelNum, levelName) {
+      const card0 = document.getElementById("cardLvl0");
+      const card1 = document.getElementById("cardLvl1");
+      const card2 = document.getElementById("cardLvl2");
+      const badge = document.getElementById("solutionLevelBadge");
+
+      badge.innerText = `${levelName} 맞춤형 솔루션 활성화`;
+
+      [card0, card1, card2].forEach(c => {
+        c.classList.remove("ring-2", "ring-indigo-600", "ring-rose-500", "ring-amber-500", "ring-emerald-500", "opacity-100", "shadow-md");
+        c.classList.add("opacity-60");
+      });
+
+      if (levelNum === 2) {
+        card2.classList.remove("opacity-60");
+        card2.classList.add("opacity-100", "ring-2", "ring-rose-500", "shadow-md");
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800";
+      } else if (levelNum === 1) {
+        card1.classList.remove("opacity-60");
+        card1.classList.add("opacity-100", "ring-2", "ring-amber-500", "shadow-md");
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800";
+      } else {
+        card0.classList.remove("opacity-60");
+        card0.classList.add("opacity-100", "ring-2", "ring-emerald-500", "shadow-md");
+        badge.className = "text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800";
+      }
+    }
+
+    // 상세 알고리즘 토글
+    function toggleDetails() {
+      const content = document.getElementById("detailsContent");
+      const icon = document.getElementById("accordionIcon");
+      if (content.classList.contains("hidden")) {
+        content.classList.remove("hidden");
+        icon.style.transform = "rotate(180deg)";
+      } else {
+        content.classList.add("hidden");
+        icon.style.transform = "rotate(0deg)";
+      }
+    }
+
+    /* ========================================================
+       5. 4-7-8 호흡 운동 모달 로직
+       ======================================================== */
+    let breathInterval = null;
+    let breathTimeout = null;
+
+    function openBreathingModal() {
+      document.getElementById("breathingModal").classList.remove("hidden");
+    }
+
+    function closeBreathingModal() {
+      document.getElementById("breathingModal").classList.add("hidden");
+      resetBreathing();
+    }
+
+    function resetBreathing() {
+      clearInterval(breathInterval);
+      clearTimeout(breathTimeout);
+      document.getElementById("breathStageText").innerText = "준비";
+      document.getElementById("breathTimerNum").innerText = "4";
+      document.getElementById("breathInstruction").innerText = "호흡 가이드 시작 버튼을 눌러주세요.";
+      const circle = document.getElementById("breathCircle");
+      circle.style.transform = "scale(1)";
+      document.getElementById("btnStartBreath").disabled = false;
+      document.getElementById("btnStartBreath").innerText = "호흡 가이드 시작";
+    }
+
+    function startBreathingCycle() {
+      document.getElementById("btnStartBreath").disabled = true;
+      document.getElementById("btnStartBreath").innerText = "호흡 진행 중...";
+
+      runOneCycle();
+    }
+
+    function runOneCycle() {
+      const circle = document.getElementById("breathCircle");
+      const stageText = document.getElementById("breathStageText");
+      const timerNum = document.getElementById("breathTimerNum");
+      const instruction = document.getElementById("breathInstruction");
+
+      // 1. 숨 들이마시기 (4초)
+      stageText.innerText = "들숨 (코로)";
+      instruction.innerText = "코로 천천히 깊게 숨을 들이마십니다 (4초)";
+      circle.style.transform = "scale(1.35)";
+      circle.className = "w-36 h-36 rounded-full bg-gradient-to-tr from-indigo-500 to-sky-400 flex flex-col items-center justify-center text-white shadow-lg transition-transform duration-4000 ease-out";
+      
+      let count = 4;
+      timerNum.innerText = count;
+      clearInterval(breathInterval);
+      breathInterval = setInterval(() => {
+        count--;
+        if (count > 0) timerNum.innerText = count;
+        if (count <= 0) {
+          clearInterval(breathInterval);
+          // 2. 숨 멈추기 (7초)
+          stageText.innerText = "숨 멈추기";
+          instruction.innerText = "폐 가득 찬 공기를 유지하며 멈춥니다 (7초)";
+          circle.style.transform = "scale(1.35)";
+          circle.className = "w-36 h-36 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 flex flex-col items-center justify-center text-white shadow-lg";
+          
+          let holdCount = 7;
+          timerNum.innerText = holdCount;
+          breathInterval = setInterval(() => {
+            holdCount--;
+            if (holdCount > 0) timerNum.innerText = holdCount;
+            if (holdCount <= 0) {
+              clearInterval(breathInterval);
+              // 3. 숨 내쉬기 (8초)
+              stageText.innerText = "날숨 (입으로)";
+              instruction.innerText = "입으로 '후-' 소리를 내며 천천히 내쉽니다 (8초)";
+              circle.style.transform = "scale(1)";
+              circle.className = "w-36 h-36 rounded-full bg-gradient-to-tr from-violet-500 to-purple-600 flex flex-col items-center justify-center text-white shadow-lg transition-transform duration-8000 ease-in-out";
+              
+              let exhaleCount = 8;
+              timerNum.innerText = exhaleCount;
+              breathInterval = setInterval(() => {
+                exhaleCount--;
+                if (exhaleCount > 0) timerNum.innerText = exhaleCount;
+                if (exhaleCount <= 0) {
+                  clearInterval(breathInterval);
+                  stageText.innerText = "완료";
+                  instruction.innerText = "한 사이클이 끝났습니다. 몸이 한결 편안해졌습니다.";
+                  document.getElementById("btnStartBreath").disabled = false;
+                  document.getElementById("btnStartBreath").innerText = "다시 시작하기";
+                }
+              }, 1000);
+            }
+          }, 1000);
+        }
+      }, 1000);
+    }
+
+    /* ========================================================
+       6. 긍정 일기 모달 로직
+       ======================================================== */
+    function openGratitudeModal() {
+      document.getElementById("gratitudeModal").classList.remove("hidden");
+    }
+
+    function closeGratitudeModal() {
+      document.getElementById("gratitudeModal").classList.add("hidden");
+    }
+
+    function saveGratitude() {
+      const text = document.getElementById("gratitudeText").value.trim();
+      if (!text) {
+        alert("내용을 입력해 주세요.");
+        return;
+      }
+      alert("마음 서랍에 소중한 긍정 기록이 저장되었습니다! 회복탄력성이 +1 증가했습니다. 🌱");
+      document.getElementById("gratitudeText").value = "";
+      closeGratitudeModal();
+    }
+
+    // 페이지 로드 시 기본 초기화 (첫 화면 세팅)
+    window.onload = function() {
+      loadPreset('sns');
+    };
+  </script>
+</body>
+</html>
